@@ -5,10 +5,15 @@ from conans import ConanFile, CMake, tools
 import os
 import shutil
 
+try:
+    import conanos.conan.hacks.cmake
+except:
+    if os.environ.get('EMSCRIPTEN_VERSIONS'):
+        raise Exception('Please use pip install conanos to patch conan for emscripten binding !')
 
 class LeptonicaConan(ConanFile):
     name = "leptonica"
-    version = "1.75.1"
+    version = "1.76.0"
     url = "https://github.com/bincrafters/conan-leptonica"
     homepage = "http://leptonica.org"
     description = "Library containing software that is broadly useful for image processing and image analysis applications."
@@ -29,24 +34,50 @@ class LeptonicaConan(ConanFile):
                "fPIC": [True, False]
               }
     default_options = ("shared=False",
-                       "with_gif=True",
+                       "with_gif=False",
                        "with_jpeg=True",
                        "with_png=True",
-                       "with_tiff=True",
+                       "with_tiff=False",
                        "with_openjpeg=False",
                        "with_webp=False",
                        "fPIC=True")
 
     source_subfolder = "source_subfolder"
 
+    def is_emscripten(self):
+        try:
+            return self.settings.compiler == 'emcc'
+        except:
+            return False
+
+    def configure(self):
+        del self.settings.compiler.libcxx
+
+        if self.is_emscripten():
+            del self.settings.os
+            del self.settings.arch
+            self.options.remove("fPIC")
+            self.options.remove("shared")
+            
+
+        # use shared zlib for dynamic lib
+        if not self.is_emscripten():
+            if self.options.shared:
+                self.options['zlib'].shared = True
+                if self.options.with_jpeg:
+                    self.options['libjpeg-turbo'].shared = True
+                if self.options.with_png:
+                    self.options['libpng'].shared = True
+
     def requirements(self):
-        self.requires.add("zlib/1.2.11@conan/stable")
+        self.requires.add("zlib/1.2.11@conanos/testing")
+        if self.options.with_jpeg:
+            self.requires.add("libjpeg-turbo/1.5.2@conanos/testing")
+        if self.options.with_png:
+            self.requires.add("libpng/1.6.34@conanos/testing")
+
         if self.options.with_gif:
             self.requires.add("giflib/5.1.4@bincrafters/stable")
-        if self.options.with_jpeg:
-            self.requires.add("libjpeg/9c@bincrafters/stable")
-        if self.options.with_png:
-            self.requires.add("libpng/1.6.34@bincrafters/stable")
         if self.options.with_tiff:
             self.requires.add("libtiff/4.0.9@bincrafters/stable")
         if self.options.with_openjpeg:
@@ -70,6 +101,7 @@ class LeptonicaConan(ConanFile):
                     os.path.join(self.source_subfolder, "CMakeLists.txt"))
 
     def build(self):
+        emcc = self.is_emscripten()
         if self.options.with_openjpeg:
             # patch prefix for openjpeg pc file.
             # note the difference between pc name and package name
@@ -82,11 +114,11 @@ class LeptonicaConan(ConanFile):
 
         with tools.environment_append({'PKG_CONFIG_PATH': self.build_folder}):
             cmake = CMake(self)
-            cmake.definitions['STATIC'] = not self.options.shared
+            cmake.definitions['STATIC'] = False if emcc else not self.options.shared
             cmake.definitions['BUILD_PROG'] = False
             # avoid finding system libs
-            cmake.definitions['CMAKE_DISABLE_FIND_PACKAGE_GIF'] = not self.options.with_gif
-            cmake.definitions['CMAKE_DISABLE_FIND_PACKAGE_PNG'] = not self.options.with_png
+            cmake.definitions['CMAKE_DISABLE_FIND_PACKAGE_GIF']  = not self.options.with_gif
+            cmake.definitions['CMAKE_DISABLE_FIND_PACKAGE_PNG']  = not self.options.with_png
             cmake.definitions['CMAKE_DISABLE_FIND_PACKAGE_TIFF'] = not self.options.with_tiff
             cmake.definitions['CMAKE_DISABLE_FIND_PACKAGE_JPEG'] = not self.options.with_jpeg
 
@@ -119,7 +151,7 @@ class LeptonicaConan(ConanFile):
 
     def _fix_absolute_paths(self):
         # Fix pc file: cmake does not fill libs.private
-        if self.settings.os != 'Windows':
+        if self.is_emscripten() or self.settings.os != 'Windows':
             libs_private = []
             for dep in self.deps_cpp_info.deps:
                 libs_private.extend(['-L'+path for path in self.deps_cpp_info[dep].lib_paths])
@@ -135,7 +167,7 @@ class LeptonicaConan(ConanFile):
                 "# Provide the include directories to the caller",
                 'get_filename_component(PACKAGE_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)\n'
                 'get_filename_component(PACKAGE_PREFIX "${PACKAGE_PREFIX}" PATH)')
-        if self.settings.os == 'Windows':
+        if hasattr(self.settings,'os') and self.settings.os == 'Windows':
             from_str = self.package_folder.replace('\\', '/')
         else:
             from_str = self.package_folder
