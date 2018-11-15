@@ -4,7 +4,7 @@
 from conans import ConanFile, CMake, tools
 import os
 import shutil
-
+from conanos.build import config_scheme
 try:
     import conanos.conan.hacks.cmake
 except:
@@ -60,21 +60,25 @@ class LeptonicaConan(ConanFile):
             self.options.remove("shared")
             
 
-        # use shared zlib for dynamic lib
-        if not self.is_emscripten():
-            if self.options.shared:
-                self.options['zlib'].shared = True
-                if self.options.with_jpeg:
-                    self.options['libjpeg-turbo'].shared = True
-                if self.options.with_png:
-                    self.options['libpng'].shared = True
+        ## use shared zlib for dynamic lib
+        #if not self.is_emscripten():
+        #    if self.options.shared:
+        #        self.options['zlib'].shared = True
+        #        if self.options.with_jpeg:
+        #            self.options['libjpeg-turbo'].shared = True
+        #        if self.options.with_png:
+        #            self.options['libpng'].shared = True
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            self.options.remove("fPIC")
 
     def requirements(self):
-        self.requires.add("zlib/1.2.11@conanos/testing")
+        self.requires.add("zlib/1.2.11@conanos/stable")
         if self.options.with_jpeg:
-            self.requires.add("libjpeg-turbo/1.5.2@conanos/testing")
+            self.requires.add("libjpeg-turbo/1.5.2@conanos/stable")
         if self.options.with_png:
-            self.requires.add("libpng/1.6.34@conanos/testing")
+            self.requires.add("libpng/1.6.34@conanos/stable")
 
         if self.options.with_gif:
             self.requires.add("giflib/5.1.4@bincrafters/stable")
@@ -84,10 +88,8 @@ class LeptonicaConan(ConanFile):
             self.requires.add("openjpeg/2.3.0@bincrafters/stable")
         if self.options.with_webp:
             self.requires.add("libwebp/1.0.0@bincrafters/stable")
-
-    def config_options(self):
-        if self.settings.os == "Windows":
-            self.options.remove("fPIC")
+            
+        config_scheme(self)
 
     def source(self):
         source_url = "https://github.com/DanBloomberg/leptonica"

@@ -1,9 +1,8 @@
 ## Package Status
 
-| Bintray | Windows | Linux & macOS |
-|:--------:|:---------:|:-----------------:|
-|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/leptonica%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/leptonica%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/github/bincrafters/conan-leptonica?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-leptonica)|[![Build Status](https://travis-ci.org/bincrafters/conan-leptonica.svg)](https://travis-ci.org/bincrafters/conan-leptonica)|
-
+| Windows | Linux & macOS |
+|:---------:|:-----------------:|
+|[![Build status](https://ci.appveyor.com/api/projects/status/github/conanos/leptonica?svg=true)](https://ci.appveyor.com/project/Mingyiz/leptonica)|[![Build Status](https://travis-ci.org/conanos/leptonica.svg)](https://travis-ci.org/conanos/leptonica)|
 ## Conan.io Information
 
 Bincrafters packages can be found in the following public Conan repository:
