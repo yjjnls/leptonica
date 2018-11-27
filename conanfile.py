@@ -169,7 +169,7 @@ class LeptonicaConan(ConanFile):
                 "# Provide the include directories to the caller",
                 'get_filename_component(PACKAGE_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)\n'
                 'get_filename_component(PACKAGE_PREFIX "${PACKAGE_PREFIX}" PATH)')
-        if hasattr(self.settings,'os') and self.settings.os == 'Windows':
+        if not self.is_emscripten() and self.settings.os == 'Windows':
             from_str = self.package_folder.replace('\\', '/')
         else:
             from_str = self.package_folder

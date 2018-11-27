@@ -11,7 +11,6 @@ if __name__ == "__main__":
         for version in os.environ['EMSCRIPTEN_VERSIONS'].split(','):
             for build_type in os.environ.get('CONAN_BUILD_TYPES','Debug').split(','):
                 builder.add(settings={
-                    "os": platform.system(),
                     "arch": os.environ.get('CONAN_ARCHS','x86_64'), 
                     "compiler": "emcc",
                     "compiler.libcxx":'libstdc++11',
