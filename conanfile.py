@@ -37,7 +37,7 @@ class LeptonicaConan(ConanFile):
                        "with_gif=False",
                        "with_jpeg=True",
                        "with_png=True",
-                       "with_tiff=False",
+                       "with_tiff=True",
                        "with_openjpeg=False",
                        "with_webp=False",
                        "fPIC=True")
@@ -83,7 +83,7 @@ class LeptonicaConan(ConanFile):
         if self.options.with_gif:
             self.requires.add("giflib/5.1.4@bincrafters/stable")
         if self.options.with_tiff:
-            self.requires.add("libtiff/4.0.9@bincrafters/stable")
+            self.requires.add("libtiff/4.0.9@conanos/stable")
         if self.options.with_openjpeg:
             self.requires.add("openjpeg/2.3.0@bincrafters/stable")
         if self.options.with_webp:
